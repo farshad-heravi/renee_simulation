@@ -6,3 +6,6 @@
 	path = robotnik_simulation
 	url = git@github.com:farshad-heravi/robotnik_simulation.git
 	branch = jazzy-devel
+[submodule "renee_rbvogui_navigation"]
+	path = renee_rbvogui_navigation
+	url = git@github.com:farshad-heravi/renee_rbvogui_navigation.git
