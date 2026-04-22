@@ -2,3 +2,7 @@
 	path = campetella_sim
 	url = git@github.com:alefram/campetella_sim.git
 	branch = update-worlds
+[submodule "robotnik_simulation"]
+	path = robotnik_simulation
+	url = git@github.com:farshad-heravi/robotnik_simulation.git
+	branch = jazzy-devel
