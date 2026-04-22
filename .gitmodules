@@ -9,3 +9,7 @@
 [submodule "renee_rbvogui_navigation"]
 	path = renee_rbvogui_navigation
 	url = git@github.com:farshad-heravi/renee_rbvogui_navigation.git
+[submodule "robotnik_description"]
+	path = robotnik_description
+	url = git@github.com:farshad-heravi/robotnik_description.git
+	branch = jazzy-devel
