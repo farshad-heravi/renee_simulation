@@ -13,3 +13,6 @@
 	path = robotnik_description
 	url = git@github.com:farshad-heravi/robotnik_description.git
 	branch = jazzy-devel
+[submodule "onrobot-ros2"]
+	path = onrobot-ros2
+	url = git@github.com:farshad-heravi/onrobot-ros2.git
