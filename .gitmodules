@@ -1,0 +1,4 @@
+[submodule "campetella_sim"]
+	path = campetella_sim
+	url = git@github.com:alefram/campetella_sim.git
+	branch = update-worlds
