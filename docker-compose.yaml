@@ -64,3 +64,5 @@ services:
   ros_terminal:
     <<: *simulation
     command: bash
+volumes:
+  tmp:
