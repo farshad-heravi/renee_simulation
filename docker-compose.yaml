@@ -1,0 +1,66 @@
+x-gazebo-simulation: &simulation
+  image: farshadnh/fnh_robotnik_sim:latest
+  network_mode: host
+  privileged: true
+  environment:
+    ROS_DOMAIN_ID: 0
+    DISPLAY: ${DISPLAY}
+    GZ_VERSION: harmonic
+    ROBOT: rbvogui
+    ROBOT_MODEL: rbvogui_plus
+    RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+    ROS2_CLI_DISABLE_DAEMON: 1
+    RENEE_SRC_PATH: /fnh_pkgs/src/renee_simulation
+  group_add:
+    - "107"
+  devices:
+    - "/dev/dri:/dev/dri"
+    - /tmp/.X11-unix:/tmp/.X11-unix  
+    - /dev/input:/dev/input
+  volumes:
+    - tmp:/tmp
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new:/fnh_pkgs:rw
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/build_pkgs.sh:/build_pkgs.sh:ro
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/robot_spawn_entrypoint.sh:/robot_spawn_entrypoint.sh:ro
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/slam_entrypoint.sh:/slam_entrypoint.sh:ro
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/navigation_entrypoint.sh:/navigation_entrypoint.sh:ro
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/localization_entrypoint.sh:/localization_entrypoint.sh:ro
+    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/moveit_entrypoint.sh:/moveit_entrypoint.sh:ro
+    #- /home/mpt/projects/renee_codebase/renee_pkgs/explore_entrypoint.sh:/explore_entrypoint.sh:ro
+    #- /home/mpt/projects/renee_codebase/renee_pkgs/bt_entrypoint.sh:/bt_entrypoint.sh:ro
+
+services:
+  world:
+    <<: *simulation
+    command: /world_spawn_entrypoint.sh
+  spawn-robot:
+    <<: *simulation
+    command: /robot_spawn_entrypoint.sh
+  slam:
+    <<: *simulation
+    command: /slam_entrypoint.sh
+  navigation:
+    <<: *simulation
+    command: /navigation_entrypoint.sh
+  localization:
+    <<: *simulation
+    command: /localization_entrypoint.sh
+  # explore:
+  #   <<: *simulation
+  #   command: /explore_entrypoint.sh
+  moveit:
+    <<: *simulation
+    command: /moveit_entrypoint.sh
+  # joystick:
+  #   <<: *simulation
+  #   command: ros2 launch teleop_twist_joy teleop-launch.py config_filepath:=/fnh_pkgs/custom.config.yaml joy_vel:=/robot/robotnik_base_control/cmd_vel_unstamped
+  # bt:
+  #   <<: *simulation
+  #   command: /bt_entrypoint.sh
+  builder:
+    <<: *simulation
+    command: /build_pkgs.sh
+  ros_terminal:
+    <<: *simulation
+    command: bash
