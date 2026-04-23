@@ -16,3 +16,62 @@
 [submodule "onrobot-ros2"]
 	path = onrobot-ros2
 	url = git@github.com:farshad-heravi/onrobot-ros2.git
+[submodule "Universal_Robots_ROS2_Description"]
+	path = Universal_Robots_ROS2_Description
+	url = https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git
+	branch = jazzy
+[submodule "gz_ros2_control"]
+	path = gz_ros2_control
+	url = https://github.com/ros-controls/gz_ros2_control.git
+	branch = jazzy
+[submodule "ros2_control"]
+	path = ros2_control
+	url = https://github.com/ros-controls/ros2_control.git
+	branch = jazzy
+[submodule "ros2_controllers"]
+	path = ros2_controllers
+	url = https://github.com/ros-controls/ros2_controllers.git
+	branch = jazzy
+[submodule "srdfdom"]
+	path = srdfdom
+	url = https://github.com/moveit/srdfdom.git
+	branch = ros2
+[submodule "moveit_msgs"]
+	path = moveit_msgs
+	url = https://github.com/ros-planning/moveit_msgs.git
+	branch = ros2
+[submodule "moveit2"]
+	path = moveit2
+	url = https://github.com/ros-planning/moveit2.git
+	branch = main
+[submodule "Universal_Robots_ROS2_Driver"]
+	path = Universal_Robots_ROS2_Driver
+	url = https://github.com/farshad-heravi/Universal_Robots_ROS2_Driver.git
+	branch = jazzy
+[submodule "ur_msgs"]
+	path = ur_msgs
+	url = https://github.com/ros-industrial/ur_msgs.git
+	branch = humble-devel
+[submodule "Universal_Robots_Client_Library"]
+	path = Universal_Robots_Client_Library
+	url = https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
+	branch = master
+[submodule "Universal_Robots_ROS2_GZ_Simulation"]
+	path = Universal_Robots_ROS2_GZ_Simulation
+	url = https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git
+	branch = ros2
+[submodule "robotnik_sensors"]
+	path = robotnik_sensors
+	url = https://github.com/RobotnikAutomation/robotnik_sensors.git
+	branch = jazzy-devel
+[submodule "robotnik_common"]
+	path = robotnik_common
+	url = https://github.com/RobotnikAutomation/robotnik_common.git
+	branch = jazzy-devel
+[submodule "robotnik_interfaces"]
+	path = robotnik_interfaces
+	url = https://github.com/RobotnikAutomation/robotnik_interfaces.git
+	branch = jazzy-devel
+[submodule "mobile_manipulator_rbvogui_plus_moveit_config"]
+	path = mobile_manipulator_rbvogui_plus_moveit_config
+	url = git@github.com:farshad-heravi/mobile_manipulator_rbvogui_plus_moveit_config.git
