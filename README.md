@@ -17,6 +17,9 @@ For spawning the world and the robot
 ```
 docker compose up world spawn-robot
 ```
+you would see the following windows
+<img width="1851" height="1174" alt="Screenshot from 2026-04-23 16-06-33" src="https://github.com/user-attachments/assets/c4094aa8-d5e2-498b-89ee-a330c584e47d" />
+
 
 In the second terminal
 ```
