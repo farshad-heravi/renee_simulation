@@ -78,3 +78,6 @@
 [submodule "renee_behavior_tree"]
 	path = renee_behavior_tree
 	url = git@github.com:farshad-heravi/renee_behavior_tree.git
+[submodule "renee_action_servers"]
+	path = renee_action_servers
+	url = git@github.com:farshad-heravi/renee_action_servers.git
