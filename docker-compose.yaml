@@ -19,16 +19,17 @@ x-gazebo-simulation: &simulation
     - /dev/input:/dev/input
   volumes:
     - tmp:/tmp
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new:/fnh_pkgs:rw
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/build_pkgs.sh:/build_pkgs.sh:ro
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/robot_spawn_entrypoint.sh:/robot_spawn_entrypoint.sh:ro
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/slam_entrypoint.sh:/slam_entrypoint.sh:ro
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/navigation_entrypoint.sh:/navigation_entrypoint.sh:ro
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/localization_entrypoint.sh:/localization_entrypoint.sh:ro
-    - /home/mpt/projects/renee_codebase/renee_pkgs_new/src/renee_simulation/moveit_entrypoint.sh:/moveit_entrypoint.sh:ro
-    #- /home/mpt/projects/renee_codebase/renee_pkgs/explore_entrypoint.sh:/explore_entrypoint.sh:ro
-    #- /home/mpt/projects/renee_codebase/renee_pkgs/bt_entrypoint.sh:/bt_entrypoint.sh:ro
+    - ./../..:/fnh_pkgs:rw
+    - ./build_pkgs.sh:/build_pkgs.sh:ro
+    - ./world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
+    - ./robot_spawn_entrypoint.sh:/robot_spawn_entrypoint.sh:ro
+    - ./slam_entrypoint.sh:/slam_entrypoint.sh:ro
+    - ./navigation_entrypoint.sh:/navigation_entrypoint.sh:ro
+    - ./localization_entrypoint.sh:/localization_entrypoint.sh:ro
+    - ./moveit_entrypoint.sh:/moveit_entrypoint.sh:ro
+    #- ./explore_entrypoint.sh:/explore_entrypoint.sh:ro
+    - ./bt_entrypoint.sh:/bt_entrypoint.sh:ro
+    - ./demo_spawn.sh:/demo_spawn.sh:ro
 
 services:
   world:
@@ -55,14 +56,17 @@ services:
   # joystick:
   #   <<: *simulation
   #   command: ros2 launch teleop_twist_joy teleop-launch.py config_filepath:=/fnh_pkgs/custom.config.yaml joy_vel:=/robot/robotnik_base_control/cmd_vel_unstamped
-  # bt:
-  #   <<: *simulation
-  #   command: /bt_entrypoint.sh
+  bt:
+    <<: *simulation
+    command: /bt_entrypoint.sh
   builder:
     <<: *simulation
     command: /build_pkgs.sh
   ros_terminal:
     <<: *simulation
     command: bash
+  demo:
+    <<: *simulation
+    command: /demo_spawn.sh
 volumes:
   tmp:
