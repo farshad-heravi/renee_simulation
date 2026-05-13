@@ -4,7 +4,7 @@
 Use the following command to clone the repo and submodules inside your ws folder
 ```
 mkdir src && cd src
-git clone --recursive-submodules git@github.com:farshad-heravi/renee_simulation.git
+git clone --recurse-submodules git@github.com:farshad-heravi/renee_simulation.git
 ```
 
 For the initial building, run
