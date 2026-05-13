@@ -9,6 +9,7 @@ git clone --recurse-submodules git@github.com:farshad-heravi/renee_simulation.gi
 
 For the initial building, run
 ```
+cd renee_simulation
 docker compose up builder
 ```
 
