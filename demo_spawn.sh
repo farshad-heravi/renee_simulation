@@ -24,7 +24,11 @@ x:=2.5 \
 y:=2.5 \
 rviz_config:=$RENEE_SRC_PATH/renee_rbvogui_navigation/config/rviz_config.rviz \
 low_performance_simulation:=true \
-end_effector:=rg6 &
+end_effector:=none \
+use_tool_changer:=true &
+
+# Spawn all 4 detachable tools (RSPs + Gazebo models + bridges + tool_manager)
+sleep 15 && ros2 launch renee_rbvogui_plus_moveit_config spawn_tools.launch.py &
 
 
 # # LOAD MAP and LOCALIZATION

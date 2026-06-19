@@ -8,4 +8,4 @@ x:=7.0 \
 y:=2.0 \
 rviz_config:=$RENEE_SRC_PATH/renee_rbvogui_navigation/config/rviz_config.rviz \
 low_performance_simulation:=true \
-end_effector:=rg6
+end_effector:=none
