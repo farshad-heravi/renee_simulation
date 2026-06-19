@@ -18,7 +18,7 @@
 	url = git@github.com:farshad-heravi/onrobot-ros2.git
 [submodule "Universal_Robots_ROS2_Description"]
 	path = ur_robot_packages/Universal_Robots_ROS2_Description
-	url = https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git
+	url = git@github.com:farshad-heravi/Universal_Robots_ROS2_Description.git
 	branch = jazzy
 [submodule "gz_ros2_control"]
 	path = robotnik_packages/gz_ros2_control
@@ -47,7 +47,7 @@
 [submodule "Universal_Robots_ROS2_Driver"]
 	path = ur_robot_packages/Universal_Robots_ROS2_Driver
 	url = https://github.com/farshad-heravi/Universal_Robots_ROS2_Driver.git
-	branch = jazzy
+	branch = jazzy-devel
 [submodule "ur_msgs"]
 	path = ur_robot_packages/ur_msgs
 	url = https://github.com/ros-industrial/ur_msgs.git
