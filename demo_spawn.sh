@@ -4,7 +4,7 @@ cd /fnh_pkgs
 source install/setup.bash
 
 ### SPAWN THE WORLD
-export GZ_SIM_RESOURCE_PATH=$RENEE_SRC_PATH/campetella_sim/campetella_sim/models:$GZ_SIM_RESOURCE_PATH
+export GZ_SIM_RESOURCE_PATH=$RENEE_SRC_PATH/campetella_sim/models:$GZ_SIM_RESOURCE_PATH
 echo $GZ_SIM_RESOURCE_PATH
 ros2 launch robotnik_gazebo_ignition spawn_world.launch.py \
 world_path:=$RENEE_SRC_PATH/../../install/renee_rbvogui_navigation/share/renee_rbvogui_navigation/world/table_cube_world.sdf &
