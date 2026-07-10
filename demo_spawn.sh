@@ -19,7 +19,8 @@ ros2 run tf2_ros static_transform_publisher \
 
 ### SPAWN THE MOBILE MANIPULATOR
 export ROBOT_MODEL=rbvogui_plus
-sleep 5 && ros2 launch robotnik_gazebo_ignition spawn_robot.launch.py robot_id:=robot robot:=rbvogui run_rviz:=true \
+# Wait for the Gazebo world to actually be running (clock publishing)
+wait_for_ros --timeout 60 topic /clock --msg && ros2 launch robotnik_gazebo_ignition spawn_robot.launch.py robot_id:=robot robot:=rbvogui run_rviz:=true \
 x:=2.5 \
 y:=2.5 \
 rviz_config:=$RENEE_SRC_PATH/renee_rbvogui_navigation/config/rviz_config.rviz \
@@ -27,8 +28,10 @@ low_performance_simulation:=true \
 end_effector:=none \
 use_tool_changer:=true &
 
-# Spawn all 4 detachable tools (RSPs + Gazebo models + bridges + tool_manager)
-sleep 15 && ros2 launch renee_rbvogui_plus_moveit_config spawn_tools.launch.py &
+# Spawn all 4 detachable tools (RSPs + Gazebo models + bridges + tool_manager),
+# once the robot's arm controller is actually active
+wait_for_ros --timeout 90 controller /robot/controller_manager joint_trajectory_controller --state active \
+  && ros2 launch renee_rbvogui_plus_moveit_config spawn_tools.launch.py &
 
 
 # # LOAD MAP and LOCALIZATION
@@ -37,6 +40,3 @@ ros2 launch slam_toolbox localization_launch.py use_sim:=true robot_id:=robot \
 
 # # RUN NAVIGATION
 ros2 launch renee_rbvogui_navigation navigation.launch.py use_sim:=true robot_id:=robot
-
-
-

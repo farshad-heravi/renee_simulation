@@ -29,9 +29,10 @@ ros2 run tf2_ros static_transform_publisher \
   --frame-id world \
   --child-frame-id robot_map &
 
-sleep 2 && ros2 run ros_gz_sim create -name campetella \
+# Wait for the Gazebo world to actually be running (clock publishing)
+wait_for_ros --timeout 60 topic /clock --msg && ros2 run ros_gz_sim create -name campetella \
 -topic /campetella_robot_description \
--x 4.5 -y 3.0 -z 0.2 
+-x 4.5 -y 3.0 -z 0.2
 tail -f /dev/null
 
 
