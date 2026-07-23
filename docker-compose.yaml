@@ -15,7 +15,7 @@ x-gazebo-simulation: &simulation
     - "107"
   devices:
     - "/dev/dri:/dev/dri"
-    - /tmp/.X11-unix:/tmp/.X11-unix  
+    - /tmp/.X11-unix:/tmp/.X11-unix
     - /dev/input:/dev/input
   volumes:
     - tmp:/tmp
@@ -30,6 +30,7 @@ x-gazebo-simulation: &simulation
     #- ./explore_entrypoint.sh:/explore_entrypoint.sh:ro
     - ./bt_entrypoint.sh:/bt_entrypoint.sh:ro
     - ./demo_spawn.sh:/demo_spawn.sh:ro
+    - ./scanning_entrypoint.sh:/scanning_entrypoint.sh:ro
 
 x-healthcheck-defaults: &healthcheck_defaults
   interval: 5s
@@ -130,5 +131,8 @@ services:
   demo:
     <<: *simulation
     command: /demo_spawn.sh
+  scanning:
+    <<: *simulation
+    command: /scanning_entrypoint.sh
 volumes:
   tmp:
