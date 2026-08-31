@@ -34,7 +34,10 @@ x-gazebo-simulation: &simulation
 
 x-healthcheck-defaults: &healthcheck_defaults
   interval: 5s
-  timeout: 5s
+  # ROS 2 discovery and TF queries can take a little over five seconds under
+  # Gazebo load.  A 5 s Docker timeout killed otherwise successful readiness
+  # checks, marking dependencies unhealthy and preventing Nav2 from starting.
+  timeout: 20s
   retries: 3
 
 # All healthchecks shell out to renee_bringup_utils' wait_for_ros (built into
