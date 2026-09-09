@@ -2,6 +2,12 @@ x-gazebo-simulation: &simulation
   image: farshadnh/fnh_robotnik_sim:latest
   network_mode: host
   privileged: true
+  # The newer `deploy.resources.reservations.devices` (CDI-style) injection
+  # exposes the NVIDIA driver .so files but not the EGL vendor ICD JSON, so
+  # glvnd never selects the NVIDIA EGL backend for GUI rendering. The legacy
+  # `runtime: nvidia` hook path handles the graphics capability injection
+  # completely (confirmed: `docker info` lists `nvidia` as a runtime).
+  runtime: nvidia
   environment:
     ROS_DOMAIN_ID: 0
     DISPLAY: ${DISPLAY}
@@ -16,14 +22,24 @@ x-gazebo-simulation: &simulation
     CYCLONEDDS_URI: "<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General><Discovery><Peers><Peer address=\"127.0.0.1\"/></Peers></Discovery></Domain></CycloneDDS>"
     ROS2_CLI_DISABLE_DAEMON: 1
     RENEE_SRC_PATH: /fnh_pkgs/src/renee_simulation
+    # This host's GPU is NVIDIA; Mesa's dri2/EGL path can't drive it through
+    # a plain /dev/dri bind mount ("failed to create dri2 screen", driver
+    # (null)). NVIDIA Container Toolkit injects the real vendor EGL/GL libraries
+    # instead, gated by these two vars plus the device reservation below.
+    NVIDIA_VISIBLE_DEVICES: all
+    NVIDIA_DRIVER_CAPABILITIES: all
   group_add:
-    - "107"
+    # GID of the host's `render` group, which owns /dev/dri/renderD12*.
+    # This is assigned per-machine by the GPU driver install, not portable —
+    # check with `getent group render` if GUI rendering breaks again.
+    - "110"
   devices:
     - "/dev/dri:/dev/dri"
     - /tmp/.X11-unix:/tmp/.X11-unix
     - /dev/input:/dev/input
   volumes:
     - tmp:/tmp
+    - gz_fuel_cache:/home/robot/.gz/fuel
     - ./../..:/fnh_pkgs:rw
     - ./build_pkgs.sh:/build_pkgs.sh:ro
     - ./world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
@@ -48,14 +64,22 @@ x-healthcheck-defaults: &healthcheck_defaults
 # All healthchecks shell out to renee_bringup_utils' wait_for_ros (built into
 # /fnh_pkgs/install by the `builder` service).
 services:
+  fuel-cache-init:
+    <<: *simulation
+    user: "0:0"
+    entrypoint: ["chown", "-R", "1000:1000", "/home/robot/.gz/fuel"]
+    command: []
   world:
     <<: *simulation
     command: /world_spawn_entrypoint.sh
+    depends_on:
+      fuel-cache-init:
+        condition: service_completed_successfully
     healthcheck:
       <<: *healthcheck_defaults
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "topic", "/clock", "--msg"]
-      start_period: 90s
+      start_period: 240s
   spawn-robot:
     <<: *simulation
     command: /robot_spawn_entrypoint.sh
@@ -144,3 +168,4 @@ services:
     command: /scanning_entrypoint.sh
 volumes:
   tmp:
+  gz_fuel_cache:

@@ -15,8 +15,9 @@ ros2 run tf2_ros static_transform_publisher \
   --frame-id world \
   --child-frame-id robot_map &
 
-# Wait for the Gazebo world to actually be running (clock publishing)
-wait_for_ros --timeout 60 topic /clock --msg
+# Wait for the Gazebo world to actually be running (clock publishing).
+# 240s to allow for a cold Fuel-model load; warm-cache boots finish much faster.
+wait_for_ros --timeout 240 topic /clock --msg || exit 1
 ros2 launch campetella_sim spawn_campetella.launch.py \
 x:=4.5 y:=3.0 z:=0.2
 tail -f /dev/null
