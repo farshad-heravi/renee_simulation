@@ -85,3 +85,7 @@
 	path = renee_action_servers
 	url = git@github.com:farshad-heravi/renee_action_servers.git
 	branch = master
+[submodule "renee_perception"]
+	path = renee_perception
+	url = https://github.com/alefram/renee_perception
+	branch = main
