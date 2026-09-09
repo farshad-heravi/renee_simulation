@@ -16,7 +16,7 @@ slam_toolbox:
 
     # if you'd like to start localizing on bringup in a map and pose
     map_file_name: /fnh_pkgs/src/renee_simulation/maps/renee_environment
-    map_start_pose: [7.0, 2.0, 0.0]
+    map_start_pose: [0.016317, 0.004518, 0.002771]
 
     debug_logging: false
     throttle_scans: 1
