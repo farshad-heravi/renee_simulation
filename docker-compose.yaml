@@ -9,6 +9,11 @@ x-gazebo-simulation: &simulation
     ROBOT: rbvogui
     ROBOT_MODEL: rbvogui_plus
     RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+    # CycloneDDS auto-selects a network interface for discovery, and it
+    # may pick a bad one: nodes see each other's topic names but never
+    # exchange data. Pin it to loopback and skip multicast entirely
+    # since every node here runs on this one machine.
+    CYCLONEDDS_URI: "<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General><Discovery><Peers><Peer address=\"127.0.0.1\"/></Peers></Discovery></Domain></CycloneDDS>"
     ROS2_CLI_DISABLE_DAEMON: 1
     RENEE_SRC_PATH: /fnh_pkgs/src/renee_simulation
   group_add:
