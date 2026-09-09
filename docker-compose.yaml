@@ -12,6 +12,15 @@ x-gazebo-simulation: &simulation
     ROS_DOMAIN_ID: 0
     DISPLAY: ${DISPLAY}
     GZ_VERSION: harmonic
+    # gz-transport independently decides which interface to bind/join its
+    # discovery multicast group on (separate from CycloneDDS, and separate
+    # from the host's 224.0.0.0/4-via-lo route in setup_multicast_route.sh).
+    # Left to auto-detect, it picks the wifi interface, while the host route
+    # redirects outbound multicast onto loopback — the two never converge,
+    # so gzserver and the GUI/bridge never discover each other's topics
+    # (symptom: GUI window opens but stays blank, `gz topic -l` empty from
+    # a second process). Pin it to loopback so it matches the host route.
+    GZ_IP: 127.0.0.1
     ROBOT: rbvogui
     ROBOT_MODEL: rbvogui_plus
     RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
