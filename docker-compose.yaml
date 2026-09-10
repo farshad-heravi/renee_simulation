@@ -54,13 +54,16 @@ x-gazebo-simulation: &simulation
     - ./world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
     - ./robot_spawn_entrypoint.sh:/robot_spawn_entrypoint.sh:ro
     - ./slam_entrypoint.sh:/slam_entrypoint.sh:ro
+    - ./slam_real_entrypoint.sh:/slam_real_entrypoint.sh:ro
     - ./navigation_entrypoint.sh:/navigation_entrypoint.sh:ro
     - ./localization_entrypoint.sh:/localization_entrypoint.sh:ro
+    - ./localize_real_entrypoint.sh:/localize_real_entrypoint.sh:ro
     - ./moveit_entrypoint.sh:/moveit_entrypoint.sh:ro
     #- ./explore_entrypoint.sh:/explore_entrypoint.sh:ro
     - ./bt_entrypoint.sh:/bt_entrypoint.sh:ro
     - ./demo_spawn.sh:/demo_spawn.sh:ro
     - ./scanning_entrypoint.sh:/scanning_entrypoint.sh:ro
+    - ./planner_entrypoint.sh:/planner_entrypoint.sh:ro
 
 x-healthcheck-defaults: &healthcheck_defaults
   interval: 5s
@@ -106,6 +109,36 @@ services:
     depends_on:
       spawn-robot:
         condition: service_healthy
+    healthcheck:
+      <<: *healthcheck_defaults
+      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+             "tf", "robot_map", "robot_odom"]
+      start_period: 60s
+  slam-real:
+    <<: *simulation
+    # Real-robot mapping: consumes odom/scan/tf relayed by the
+    # vogui_ros1_ros2_bridge container (run separately, host networking on
+    # this same machine) instead of Gazebo. Same slam_toolbox launch /
+    # configs/mapper_params_online_async.yaml as the `slam` (sim) service —
+    # only the data source differs — so deliberately has no depends_on here.
+    # Uses its own entrypoint (not slam_entrypoint.sh) to also bring up an
+    # RViz window: the sim `slam` service already gets one via
+    # robot_spawn_entrypoint.sh (Fixed Frame: world), but that frame doesn't
+    # exist in the real-robot TF tree.
+    command: /slam_real_entrypoint.sh
+    healthcheck:
+      <<: *healthcheck_defaults
+      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+             "tf", "robot_map", "robot_odom"]
+      start_period: 60s
+  localize_real:
+    <<: *simulation
+    # Real-robot localization: loads the map/ maps/real_robot_environment
+    # built by slam-real and localizes against it using the same bridged
+    # odom/scan/tf data. Separate from `localization` (Gazebo-sim, untouched
+    # here on purpose) since the params file, map, and use_sim_time all
+    # differ — see configs/mapper_params_localization_real.yaml.
+    command: /localize_real_entrypoint.sh
     healthcheck:
       <<: *healthcheck_defaults
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
@@ -163,6 +196,19 @@ services:
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "topic", "/bt_task_status"]
       start_period: 30s
+  planner:
+    <<: *simulation
+    command: /planner_entrypoint.sh
+    depends_on:
+      moveit:
+        condition: service_healthy
+      navigation:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck_defaults
+      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+             "action", "/hybrid_planner/task"]
+      start_period: 60s
   builder:
     <<: *simulation
     command: /build_pkgs.sh

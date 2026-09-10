@@ -1,0 +1,96 @@
+slam_toolbox:
+  ros__parameters:
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # ROS Parameters
+    odom_frame: robot_odom
+    map_frame: robot_map
+    base_frame: robot_base_footprint
+    scan_topic: /robot/front_laser/scan
+    mode: localization # mapping
+
+    # Loads the map built during the 2026-09-10 real-robot mapping session
+    # (see configs/mapper_params_online_async.yaml / slam-real service).
+    map_file_name: /fnh_pkgs/src/renee_simulation/maps/real_robot_environment
+    # No map_start_pose set (unlike mapper_params_localization.yaml's sim
+    # equivalent, which pins one matching Gazebo's fixed spawn point): the
+    # real robot's physical pose relative to this map at whatever future
+    # moment this service is launched isn't knowable in advance. Without it,
+    # slam_toolbox starts localizing from the map's origin (wherever
+    # mapping began this session) — correct only if the robot happens to be
+    # there when this launches. If it's elsewhere, localization will need
+    # to converge from a wrong initial guess (slam_toolbox's localization
+    # mode has no equivalent of AMCL's /initialpose to nudge it once
+    # running); set a map_start_pose here instead if this becomes a
+    # recurring pain point.
+
+    debug_logging: false
+    throttle_scans: 1
+    # See configs/mapper_params_online_async.yaml for why this is 0, not
+    # the sim config's 0.02: on the real robot, slam_toolbox's periodic
+    # transform_publish_period broadcaster was observed getting stuck on a
+    # stale map->odom transform while a separate scan-triggered publish
+    # carried the real pose, and the two racing on /tf made the estimated
+    # pose (and therefore the displayed laser scan) flip-flop even with the
+    # robot stationary. Untested whether slam_toolbox's *localization*
+    # executable (vs. the online_async one where this was found) has the
+    # same issue, but there's no reason to risk it given 0 costs nothing
+    # here (real-robot data only, no Gazebo consumer needing the periodic
+    # keep-alive).
+    transform_publish_period: 0.0 #if 0 never publishes odometry
+    map_update_interval: 5.0
+    resolution: 0.05
+    min_laser_range: 0.0 #for rastering images
+    max_laser_range: 10.0 #for rastering images
+    minimum_time_interval: 0.5
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.
+    stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
+    # See configs/mapper_params_online_async.yaml: not used by this
+    # (automated) pipeline, and was implicated in the same dual-publisher
+    # /tf issue above.
+    enable_interactive_mode: false
+
+    # General Parameters
+    use_scan_matching: true
+    use_scan_barycenter: true
+    minimum_travel_distance: 0.5
+    minimum_travel_heading: 0.5
+    scan_buffer_size: 3
+    scan_buffer_maximum_scan_distance: 10.0
+    link_match_minimum_response_fine: 0.1
+    link_scan_maximum_distance: 1.5
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 3
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45
+
+    # Correlation Parameters - Correlation Parameters
+    correlation_search_space_dimension: 0.5
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.1
+
+    # Correlation Parameters - Loop Closure Parameters
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.03
+    loop_search_maximum_distance: 3.0
+
+    # Scan Matcher Parameters
+    distance_variance_penalty: 0.5
+    angle_variance_penalty: 1.0
+
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349
+    coarse_angle_resolution: 0.0349
+    minimum_angle_penalty: 0.9
+    minimum_distance_penalty: 0.5
+    use_response_expansion: true
+    min_pass_through: 2
+    occupancy_threshold: 0.1
