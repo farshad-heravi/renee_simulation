@@ -14,21 +14,12 @@ slam_toolbox:
     scan_topic: /robot/front_laser/scan
     mode: localization # mapping
 
-    # Loads the map built during the 2026-09-10 real-robot mapping session
-    # (see configs/mapper_params_online_async.yaml / slam-real service).
-    map_file_name: /fnh_pkgs/src/renee_simulation/maps/real_robot_environment
-    # No map_start_pose set (unlike mapper_params_localization.yaml's sim
-    # equivalent, which pins one matching Gazebo's fixed spawn point): the
-    # real robot's physical pose relative to this map at whatever future
-    # moment this service is launched isn't knowable in advance. Without it,
+    # Loads the map built during the 2026-09-16 real-robot mapping session
+    map_file_name: /fnh_pkgs/src/renee_simulation/maps/real_robot_environment_v3
     # slam_toolbox starts localizing from the map's origin (wherever
-    # mapping began this session) — correct only if the robot happens to be
-    # there when this launches. If it's elsewhere, localization will need
-    # to converge from a wrong initial guess (slam_toolbox's localization
-    # mode has no equivalent of AMCL's /initialpose to nudge it once
-    # running); set a map_start_pose here instead if this becomes a
-    # recurring pain point.
-
+    # mapping began) — correct only if the robot happens to be
+    # there when this launches. If it's elsewhere, use RViz's "2D Pose
+    # Estimate" tool to nudge it once running
     debug_logging: false
     throttle_scans: 1
     # See configs/mapper_params_online_async.yaml for why this is 0, not

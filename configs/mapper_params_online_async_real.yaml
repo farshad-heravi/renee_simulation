@@ -36,17 +36,20 @@ slam_toolbox:
 
     debug_logging: false
     throttle_scans: 1
-    # Was 0.02 (50Hz): confirmed by direct /tf inspection that this periodic
-    # publish path gets stuck rebroadcasting a stale/identity map->odom
-    # transform instead of the current correction, while a separate,
-    # scan-triggered publish path (~15Hz, matching scan rate) carries the
-    # real, consistent pose estimate. The two raced on /tf, and
-    # lookupTransform's "latest" nondeterministically picked whichever had
-    # published most recently — visible in RViz as the pose (and therefore
-    # the laser scan) appearing to snap/oscillate even with the robot
-    # stationary. Disabling the periodic path (0 = only publish on new data,
-    # per slam_toolbox's own convention) leaves just the consistent stream.
-    transform_publish_period: 0.0 #if 0 never publishes odometry
+    # Was 0.02 (50Hz), then 0.0 after the original dual-publisher bug (see
+    # mapper_params_online_async.yaml, still shared with sim, for that fix's
+    # history: enable_interactive_mode: true was creating a second, stuck
+    # periodic broadcaster racing the real scan-triggered one). But on this
+    # real-robot config, confirmed live on 2026-09-16 that with period 0.0
+    # slam_toolbox never broadcasts robot_map->robot_odom at all from a
+    # fresh map — not even after the robot moved 2m+ and the pose graph
+    # visibly grew (/map itself kept updating throughout) — despite
+    # enable_interactive_mode already being false, so the on-new-node-only
+    # path this value was assumed to fall back on isn't firing in this
+    # build/scenario. Since enable_interactive_mode: false already removes
+    # the original bug's actual root cause, a small nonzero period is safe
+    # here and gives a real, continuous map->odom broadcast again.
+    transform_publish_period: 0.05
     map_update_interval: 2.0 # 2.0
     resolution: 0.1
     min_laser_range: 0.05
@@ -69,24 +72,48 @@ slam_toolbox:
     use_scan_matching: true
     use_scan_barycenter: true
     minimum_travel_distance: 0.1 # 0.5
-    minimum_travel_heading: 0.2 # 0.5
+    # Was 0.2 (shared with sim, where Gazebo odometry is ~exact between
+    # scans). Confirmed on 2026-09-16 by SSHing into the robot
+    # (~/connect_rover) and reading its own onboard mapping stack
+    # (robot_bringup's mapping_2d component -> ROS1 gmapping,
+    # config/robot_local_control/slam_gmapping.yaml): it re-anchors on
+    # angularUpdate: 0.1 rad. Real wheel odometry drifts noticeably more
+    # than sim during turns (wheel slip), so re-anchoring twice as often
+    # here keeps less error to correct for between scan insertions.
+    minimum_travel_heading: 0.1 # 0.2 in the shared sim config
     scan_buffer_size: 30 # 10
-    scan_buffer_maximum_scan_distance: 10.0 # 10.0 
+    scan_buffer_maximum_scan_distance: 10.0 # 10.0
     link_match_minimum_response_fine: 0.10 #0.1   - reject weak matches
     link_scan_maximum_distance: 1.0 # 1.5 - only link nearby scans
     loop_search_maximum_distance: 6.0 # 3.0
     do_loop_closing: true
-    loop_match_minimum_chain_size: 10 # 10     # lower than default to catch loops faster       
-    loop_match_maximum_variance_coarse: 8.0  
-    loop_match_minimum_response_coarse: 0.3    
+    loop_match_minimum_chain_size: 10 # 10     # lower than default to catch loops faster
+    loop_match_maximum_variance_coarse: 8.0
+    loop_match_minimum_response_coarse: 0.3
     loop_match_minimum_response_fine: 0.4
 
     loop_match_search_size: 12
 
     # Correlation Parameters - Correlation Parameters
-    correlation_search_space_dimension: 0.5 # 0.5  # smaller = less likely to jump far
+    # Was 0.5 (shared with sim). Confirmed on 2026-09-16 (real vs. sim
+    # comparison, see minimum_travel_heading note above): slam_toolbox's
+    # correlative scan matcher has no odometry noise model at all — it
+    # deterministically searches a fixed window around wherever raw
+    # odometry says the robot is, and confidently returns the best match
+    # *inside that window* even when it's wrong. The robot's own onboard
+    # gmapping instead models odometry uncertainty explicitly
+    # (srr/srt/str/stt in slam_gmapping.yaml) and spreads 100 particles
+    # accordingly, so it tolerates real wheel-slip error that a fixed
+    # +/-0.5m window doesn't. Measured directly: the same physical spot
+    # showed the mapped wall ~0.8-1.1m from where a live scan placed it
+    # while this was still 0.5m, and the offset only shrank back to normal
+    # (~0.1-0.4m) after happening to re-visit with enough overlap to
+    # trigger a loop closure. Widening the search window gives the matcher
+    # a real chance at finding the correct alignment the first time,
+    # instead of relying on a later loop closure to fix it after the fact.
+    correlation_search_space_dimension: 1.5 # 0.5 in the shared sim config
     correlation_search_space_resolution: 0.01
-    correlation_search_space_smear_deviation: 0.1 
+    correlation_search_space_smear_deviation: 0.1
 
     # Correlation Parameters - Loop Closure Parameters
     loop_search_space_dimension: 3.0
@@ -95,11 +122,11 @@ slam_toolbox:
 
     # Scan Matcher Parameters
     distance_variance_penalty: 0.5 # 0.5 - punish big pose corrections
-    angle_variance_penalty: 0.5 # 1.0    
+    angle_variance_penalty: 0.5 # 1.0
 
-    fine_search_angle_offset: 0.00349     
-    coarse_search_angle_offset: 0.349   
-    coarse_angle_resolution: 0.0349        
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349
+    coarse_angle_resolution: 0.0349
     minimum_angle_penalty: 0.5
     minimum_distance_penalty: 0.5 # 0.5
     use_response_expansion: true
