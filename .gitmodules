@@ -89,3 +89,11 @@
 	path = renee_perception
 	url = https://github.com/alefram/renee_perception
 	branch = main
+[submodule "librealsense"]
+	path = librealsense
+	url = git@github.com:alefram/librealsense.git
+	branch = master
+[submodule "realsense-ros"]
+	path = realsense-ros
+	url = git@github.com:alefram/realsense-ros.git
+	branch = ros2-master
