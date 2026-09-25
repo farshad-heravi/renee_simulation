@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<!-- RB-Vogui rover body only (no arm, sensors or tool changer), for showing
+     the real robot in RViz: real_robot_model.launch.py publishes it as
+     /robot_description while the robot's own bridged TF places the links. -->
+<robot
+  name="rbvogui"
+  xmlns:xacro="http://wiki.ros.org/xacro">
+  <!-- Inertia macros the base needs; normally pulled in via all_sensors. -->
+  <xacro:include
+    filename="$(find robotnik_sensors)/urdf/utils/inertia.urdf.xacro" />
+  <xacro:include
+    filename="$(find robotnik_description)/urdf/bases/rbvogui/rbvogui_base.urdf.xacro" />
+
+  <xacro:arg
+    name="namespace"
+    default="robot" />
+  <xacro:arg
+    name="prefix"
+    default="robot_" />
+  <xacro:arg
+    name="gazebo_ignition"
+    default="false" />
+
+  <xacro:rbvogui
+    prefix="$(arg prefix)"
+    gazebo_ignition="$(arg gazebo_ignition)"
+    namespace="$(arg namespace)" />
+</robot>

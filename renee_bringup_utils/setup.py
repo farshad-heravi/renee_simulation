@@ -13,6 +13,8 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('lib', package_name), glob.glob('scripts/*.sh')),
+        (os.path.join('share', package_name, 'launch'), glob.glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'urdf'), glob.glob('urdf/*.xacro')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,6 +30,7 @@ setup(
     entry_points={
         'console_scripts': [
             'wait_for_ros = renee_bringup_utils.wait_for_ros:main',
+            'scan_footprint_filter = renee_bringup_utils.scan_footprint_filter:main',
         ],
     },
 )

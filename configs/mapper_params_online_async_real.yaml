@@ -13,7 +13,9 @@ slam_toolbox:
     odom_frame: robot_odom
     map_frame: robot_map
     base_frame: robot_base_footprint
-    scan_topic: /robot/front_laser/scan
+    # Chassis self-hits removed by scan_footprint_filter (started in the
+    # entrypoint); min_laser_range below only cuts the near arc by distance.
+    scan_topic: /robot/front_laser/scan_filtered
     use_map_saver: true
     mode: mapping #localization
 
@@ -52,7 +54,9 @@ slam_toolbox:
     transform_publish_period: 0.05
     map_update_interval: 2.0 # 2.0
     resolution: 0.1
-    min_laser_range: 0.05
+    # Above the front laser's ~0.29 m self-hit arc on the robot body — see
+    # mapper_params_localization_real.yaml.
+    min_laser_range: 0.35
     max_laser_range: 10.0 #for rastering images
     minimum_time_interval: 0.2 # 0.2
     transform_timeout: 1.5

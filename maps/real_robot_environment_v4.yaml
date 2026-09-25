@@ -1,0 +1,7 @@
+image: real_robot_environment_v4.pgm
+mode: trinary
+resolution: 0.100
+origin: [-8.829, -8.664, 0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196

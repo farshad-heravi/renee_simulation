@@ -14,7 +14,14 @@
 
   <exec_depend>rclpy</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
   <exec_depend>controller_manager_msgs</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>robotnik_description</exec_depend>
+  <exec_depend>robotnik_sensors</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
