@@ -89,3 +89,7 @@
 	path = renee_perception
 	url = https://github.com/alefram/renee_perception
 	branch = main
+[submodule "vogui_ros1_ros2_bridge"]
+	path = vogui_ros1_ros2_bridge
+	url = git@github.com:alefram/vogui_ros1_ros2_bridge.git
+	branch = fix/real-robot-localization-bridge
