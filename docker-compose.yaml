@@ -115,18 +115,48 @@ services:
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "tf", "robot_map", "robot_odom"]
       start_period: 60s
+  bridge-real:
+    # ROS1 (Vogui/Noetic) <-> ROS2 (Jazzy) bridge for all *-real services.
+    # Defined in the vogui_ros1_ros2_bridge submodule's own compose file
+    # (robot IP/hostname, ROS_IP, CycloneDDS pinning, .env for the clock
+    # sync); `extends` resolves its relative paths against that file.
+    extends:
+      file: vogui_ros1_ros2_bridge/docker-compose.yml
+      service: ros1_ros2_bridge
+    # Built from the submodule if the image isn't present locally.
+    build:
+      context: vogui_ros1_ros2_bridge
+      dockerfile: docker/Dockerfile
+    volumes:
+      # Run the submodule's current scripts instead of the copies baked into
+      # the image at build time, so a submodule bump doesn't need a rebuild.
+      - ./vogui_ros1_ros2_bridge/docker/entrypoint.sh:/entrypoint.sh:ro
+      - ./vogui_ros1_ros2_bridge/scripts/tf_map_filter.py:/tf_map_filter.py:ro
+      # The image has plain Jazzy but not this workspace, so mount
+      # wait_for_ros (pure rclpy) directly for the healthcheck.
+      - ./renee_bringup_utils/renee_bringup_utils/wait_for_ros.py:/wait_for_ros.py:ro
+    healthcheck:
+      <<: *healthcheck_defaults
+      # Healthy only once robot odom actually arrives on the ROS2 side, i.e.
+      # the Vogui's master is reachable and data is flowing (not just that
+      # parameter_bridge started).
+      test: ["CMD", "bash", "-c",
+             "source /opt/ros/jazzy/setup.bash && python3 /wait_for_ros.py --timeout 3 topic /robot/robotnik_base_control/odom --msg"]
+      start_period: 60s
   slam-real:
     <<: *simulation
-    # Real-robot mapping: consumes odom/scan/tf relayed by the
-    # vogui_ros1_ros2_bridge container (run separately, host networking on
-    # this same machine) instead of Gazebo. Same slam_toolbox launch /
+    # Real-robot mapping: consumes odom/scan/tf relayed by `bridge-real`
+    # instead of Gazebo. Same slam_toolbox launch /
     # configs/mapper_params_online_async.yaml as the `slam` (sim) service —
-    # only the data source differs — so deliberately has no depends_on here.
+    # only the data source differs.
     # Uses its own entrypoint (not slam_entrypoint.sh) to also bring up an
     # RViz window: the sim `slam` service already gets one via
     # robot_spawn_entrypoint.sh (Fixed Frame: world), but that frame doesn't
     # exist in the real-robot TF tree.
     command: /slam_real_entrypoint.sh
+    depends_on:
+      bridge-real:
+        condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
@@ -140,6 +170,9 @@ services:
     # here on purpose) since the params file, map, and use_sim_time all
     # differ — see configs/mapper_params_localization_real.yaml.
     command: /localize_real_entrypoint.sh
+    depends_on:
+      bridge-real:
+        condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
@@ -166,6 +199,8 @@ services:
     # vogui_ros1_ros2_bridge — see that entrypoint's comments.
     command: /navigation_real_entrypoint.sh
     depends_on:
+      bridge-real:
+        condition: service_healthy
       localize_real:
         condition: service_healthy
     healthcheck:
