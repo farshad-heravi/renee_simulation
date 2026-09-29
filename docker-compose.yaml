@@ -37,6 +37,13 @@ x-gazebo-simulation: &simulation
     # instead, gated by these two vars plus the device reservation below.
     NVIDIA_VISIBLE_DEVICES: all
     NVIDIA_DRIVER_CAPABILITIES: all
+    # Hybrid laptop (prime-select on-demand): the X screen on $DISPLAY is
+    # driven by the Intel iGPU, so GLX/EGL default to Mesa (llvmpipe inside
+    # the container) and gz-sim's Ogre2 sensor rendering runs on the CPU
+    # (RTF ~0.05). PRIME render offload routes GL to the NVIDIA dGPU.
+    __NV_PRIME_RENDER_OFFLOAD: 1
+    __GLX_VENDOR_LIBRARY_NAME: nvidia
+    __EGL_VENDOR_LIBRARY_FILENAMES: /usr/share/glvnd/egl_vendor.d/10_nvidia.json
   group_add:
     # GID of the host's `render` group, which owns /dev/dri/renderD12*.
     # This is assigned per-machine by the GPU driver install, not portable —
