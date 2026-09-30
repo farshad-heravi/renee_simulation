@@ -16,5 +16,14 @@ ros2 launch renee_bringup_utils real_robot_model.launch.py &
 scan_footprint_filter --ros-args -r __node:=front_scan_footprint_filter \
     -r scan_in:=/robot/front_laser/scan -r scan_out:=/robot/front_laser/scan_filtered &
 ros2 run rviz2 rviz2 -d $RENEE_SRC_PATH/configs/slam_real.rviz &
-ros2 launch slam_toolbox localization_launch.py use_sim_time:=false \
-    slam_params_file:=$RENEE_SRC_PATH/configs/mapper_params_localization_real.yaml
+# slam_toolbox localizes (robot_map -> robot_odom) but its live, re-rendered
+# map goes to /slam_map; map_server serves the fixed maps/${REAL_MAP}.yaml on
+# /map for Nav2's static layer (same launch as the Gazebo-sim `localization`,
+# see localization_sim.launch.py). REAL_MAP selects both the map yaml/pgm and
+# the slam_toolbox posegraph, so they must come from the same save.
+REAL_MAP=${REAL_MAP:-real_robot_environment_v4}
+echo "[localize_real] REAL_MAP=$REAL_MAP"
+ros2 launch renee_bringup_utils localization_sim.launch.py use_sim_time:=false \
+    slam_params_file:=$RENEE_SRC_PATH/configs/mapper_params_localization_real.yaml \
+    map:=$RENEE_SRC_PATH/maps/$REAL_MAP.yaml \
+    map_file_name:=$RENEE_SRC_PATH/maps/$REAL_MAP

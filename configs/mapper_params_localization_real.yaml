@@ -16,7 +16,8 @@ slam_toolbox:
     scan_topic: /robot/front_laser/scan_filtered
     mode: localization # mapping
 
-    # Loads the map built during the 2026-09-16 real-robot mapping session
+    # Loads the map built during the 2026-09-16 real-robot mapping session.
+    # localize_real_entrypoint.sh overrides it from $REAL_MAP.
     map_file_name: /fnh_pkgs/src/renee_simulation/maps/real_robot_environment_v4
     # slam_toolbox starts localizing from the map's origin (wherever
     # mapping began) — correct only if the robot happens to be
@@ -58,7 +59,9 @@ slam_toolbox:
     scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.1
     link_scan_maximum_distance: 1.5
-    do_loop_closing: true
+    # Was true. In localization mode a loop closure can shift robot_map ->
+    # robot_odom in one step (pose jump under Nav2); the sim uses false too.
+    do_loop_closing: false
     loop_match_minimum_chain_size: 3
     loop_match_maximum_variance_coarse: 3.0
     loop_match_minimum_response_coarse: 0.35
