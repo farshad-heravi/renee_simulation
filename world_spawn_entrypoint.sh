@@ -4,11 +4,14 @@ cd /fnh_pkgs
 source install/setup.bash
 export GZ_SIM_RESOURCE_PATH=$RENEE_SRC_PATH/campetella_sim/models:$GZ_SIM_RESOURCE_PATH
 echo $GZ_SIM_RESOURCE_PATH
+# GZ_GUI=false runs gz sim server-only (no `gz sim -g` client) -- frees the
+# GPU for sensor rendering in e2e runs. RViz is unaffected.
 # World selection: GZ_WORLD=<name> loads renee_rbvogui_navigation/world/<name>.sdf
 # (default: renee_room). Per-world spawn poses live in world_poses.sh, shared
 # with robot_spawn_entrypoint.sh so the robot spawn and world->robot_map agree.
 source $RENEE_SRC_PATH/world_poses.sh
 ros2 launch robotnik_gazebo_ignition spawn_world.launch.py \
+gui:=${GZ_GUI:-true} \
 world_path:=$RENEE_SRC_PATH/../../install/renee_rbvogui_navigation/share/renee_rbvogui_navigation/world/${GZ_WORLD}.sdf &
 
 # Campetella is spawned through its stable package facade.

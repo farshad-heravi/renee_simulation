@@ -21,6 +21,10 @@ x-gazebo-simulation: &simulation
     # (symptom: GUI window opens but stays blank, `gz topic -l` empty from
     # a second process). Pin it to loopback so it matches the host route.
     GZ_IP: 127.0.0.1
+    # Gazebo GUI client on/off for the `world` service. Set GZ_GUI=false on the
+    # host (e.g. `GZ_GUI=false docker compose up world spawn-robot`) for headless
+    # e2e runs: the GUI's rendering competes with the ~11 gz sensors for the GPU.
+    GZ_GUI: ${GZ_GUI:-true}
     # Gazebo world for the `world`/`spawn-robot` services: loads
     # renee_rbvogui_navigation/world/${GZ_WORLD}.sdf; spawn poses per world are
     # in world_poses.sh. e.g. `GZ_WORLD=campetella docker compose up slam`.
