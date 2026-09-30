@@ -93,3 +93,5 @@
 	path = vogui_ros1_ros2_bridge
 	url = git@github.com:alefram/vogui_ros1_ros2_bridge.git
 	branch = fix/real-robot-localization-bridge
+[submodule "renee_rbvogui_navigation/"]
+	branch = fix/real-robot-localization-bridge
