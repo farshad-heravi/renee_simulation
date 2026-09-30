@@ -9,7 +9,7 @@
 [submodule "renee_rbvogui_navigation"]
 	path = renee_rbvogui_navigation
 	url = git@github.com:farshad-heravi/renee_rbvogui_navigation.git
-	branch = master
+	branch = fix/real-robot-localization-bridge
 [submodule "robotnik_description"]
 	path = robotnik_packages/robotnik_description
 	url = git@github.com:farshad-heravi/robotnik_description.git
@@ -92,6 +92,4 @@
 [submodule "vogui_ros1_ros2_bridge"]
 	path = vogui_ros1_ros2_bridge
 	url = git@github.com:alefram/vogui_ros1_ros2_bridge.git
-	branch = fix/real-robot-localization-bridge
-[submodule "renee_rbvogui_navigation/"]
 	branch = fix/real-robot-localization-bridge
