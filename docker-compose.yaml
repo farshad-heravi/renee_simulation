@@ -36,7 +36,13 @@ x-gazebo-simulation: &simulation
     # may pick a bad one: nodes see each other's topic names but never
     # exchange data. Pin it to loopback and skip multicast entirely
     # since every node here runs on this one machine.
-    CYCLONEDDS_URI: "<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General><Discovery><Peers><Peer address=\"127.0.0.1\"/></Peers></Discovery></Domain></CycloneDDS>"
+    # Without multicast each participant needs an auto-assigned index (one
+    # unicast port pair each; the 127.0.0.1 peer is probed on every index up
+    # to the max). Cyclone's default max (32 in Jazzy's 0.10.5) is exhausted
+    # by the full stack (~31 participants at steady state),
+    # so extra ros2 CLI calls/healthchecks fail with "Failed to find a free
+    # participant index". 120 -> ports up to 7400+10+2*120+1 = 7651 on lo.
+    CYCLONEDDS_URI: "<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>120</MaxAutoParticipantIndex><Peers><Peer address=\"127.0.0.1\"/></Peers></Discovery></Domain></CycloneDDS>"
     ROS2_CLI_DISABLE_DAEMON: 1
     RENEE_SRC_PATH: /fnh_pkgs/src/renee_simulation
     # This host's GPU is NVIDIA; Mesa's dri2/EGL path can't drive it through
