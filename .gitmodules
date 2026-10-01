@@ -92,4 +92,16 @@
 [submodule "vogui_ros1_ros2_bridge"]
 	path = vogui_ros1_ros2_bridge
 	url = git@github.com:alefram/vogui_ros1_ros2_bridge.git
-	branch = fix/real-robot-localization-bridge
+	branch = master
+[submodule "librealsense"]
+	path = librealsense
+	url = git@github.com:alefram/librealsense.git
+	branch = master
+[submodule "realsense-ros"]
+	path = realsense-ros
+	url = git@github.com:alefram/realsense-ros.git
+	branch = ros2-master
+[submodule "renee_trajectory_generation"]
+	path = renee_trajectory_generation
+	url = git@github.com:alefram/renee_planner.git
+	branch = main

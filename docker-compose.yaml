@@ -21,10 +21,6 @@ x-gazebo-simulation: &simulation
     # (symptom: GUI window opens but stays blank, `gz topic -l` empty from
     # a second process). Pin it to loopback so it matches the host route.
     GZ_IP: 127.0.0.1
-    # Gazebo GUI client on/off for the `world` service. Set GZ_GUI=false on the
-    # host (e.g. `GZ_GUI=false docker compose up world spawn-robot`) for headless
-    # e2e runs: the GUI's rendering competes with the ~11 gz sensors for the GPU.
-    GZ_GUI: ${GZ_GUI:-true}
     # Gazebo world for the `world`/`spawn-robot` services: loads
     # renee_rbvogui_navigation/world/${GZ_WORLD}.sdf; spawn poses per world are
     # in world_poses.sh. e.g. `GZ_WORLD=campetella docker compose up slam`.
@@ -40,12 +36,11 @@ x-gazebo-simulation: &simulation
     # may pick a bad one: nodes see each other's topic names but never
     # exchange data. Pin it to loopback and skip multicast entirely
     # since every node here runs on this one machine.
-    # Without multicast each participant needs an auto-assigned index (one
-    # unicast port pair each; the 127.0.0.1 peer is probed on every index up
-    # to the max). Cyclone's default max (32 in Jazzy's 0.10.5) is exhausted
-    # by the full stack (~31 participants at steady state),
-    # so extra ros2 CLI calls/healthchecks fail with "Failed to find a free
-    # participant index". 120 -> ports up to 7400+10+2*120+1 = 7651 on lo.
+    # Unicast-only discovery caps participants per host at
+    # MaxAutoParticipantIndex+1 (default 10); the real-robot stack (bridge +
+    # localize_real + navigation-real + UR driver/MoveIt + RViz) exceeds that
+    # and new nodes die with "Failed to find a free participant index".
+    # Must match vogui_ros1_ros2_bridge/docker-compose.yml.
     CYCLONEDDS_URI: "<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>120</MaxAutoParticipantIndex><Peers><Peer address=\"127.0.0.1\"/></Peers></Discovery></Domain></CycloneDDS>"
     ROS2_CLI_DISABLE_DAEMON: 1
     RENEE_SRC_PATH: /fnh_pkgs/src/renee_simulation
@@ -62,6 +57,7 @@ x-gazebo-simulation: &simulation
     __NV_PRIME_RENDER_OFFLOAD: 1
     __GLX_VENDOR_LIBRARY_NAME: nvidia
     __EGL_VENDOR_LIBRARY_FILENAMES: /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+    __VK_LAYER_NV_optimus: NVIDIA_only
   group_add:
     # GID of the host's `render` group, which owns /dev/dri/renderD12*.
     # This is assigned per-machine by the GPU driver install, not portable —
@@ -74,6 +70,11 @@ x-gazebo-simulation: &simulation
   volumes:
     - tmp:/tmp
     - gz_fuel_cache:/home/robot/.gz/fuel
+    # Scoped copy of the dedicated vogui/jetson SSH key (not the user's
+    # personal key), owned by uid 1000 to match the container's `robot`
+    # user. Lets zed_ssh_capture_action_server's `ssh jetson ...` resolve
+    # from inside the container. See renee_perception/README.md.
+    - ${HOME}/.ssh_jetson_container:/home/robot/.ssh:ro
     - ./../..:/fnh_pkgs:rw
     - ./build_pkgs.sh:/build_pkgs.sh:ro
     - ./world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
