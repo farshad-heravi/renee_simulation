@@ -91,6 +91,7 @@ x-gazebo-simulation: &simulation
     - ./demo_spawn.sh:/demo_spawn.sh:ro
     - ./scanning_entrypoint.sh:/scanning_entrypoint.sh:ro
     - ./planner_entrypoint.sh:/planner_entrypoint.sh:ro
+    - ./wrist_calibration_entrypoint.sh:/wrist_calibration_entrypoint.sh:ro
 
 x-healthcheck-defaults: &healthcheck_defaults
   interval: 5s
@@ -300,6 +301,21 @@ services:
   scanning:
     <<: *simulation
     command: /scanning_entrypoint.sh
+  # Wrist-camera hand-eye calibration (package wrist_camera_calibration). Start the robot + MoveIt
+  # (sim or real) first, put a fixed ChArUco board on the desk, then:
+  #   WCC_ARGS="num_images:=20" docker compose up wrist-calibration   (WCC_ARGS = extra launch args)
+  # Results go to wrist_camera_calibration/saved/ (mounted workspace). Needs DISPLAY for the GUI and an
+  # arm_camera GrabFrame server (the real one, or the `wrist-calibration-mock` service for tests).
+  wrist-calibration:
+    <<: *simulation
+    command: /wrist_calibration_entrypoint.sh calibrate ${WCC_ARGS:-}
+  # Publishes robot_arm_tool0 -> wrist_camera_calibrated_optical_frame from the saved calibration.
+  wrist-calibration-tf:
+    <<: *simulation
+    command: /wrist_calibration_entrypoint.sh tf ${WCC_ARGS:-}
+  wrist-calibration-mock:
+    <<: *simulation
+    command: /wrist_calibration_entrypoint.sh mock ${WCC_ARGS:-}
 volumes:
   tmp:
   gz_fuel_cache:
