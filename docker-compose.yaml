@@ -50,6 +50,7 @@ x-gazebo-simulation: &simulation
     UR_ROBOT_IP: ${UR_ROBOT_IP:-192.168.0.101}
     UR_REVERSE_IP: ${UR_REVERSE_IP:-192.168.0.150}
     UR_HEADLESS_MODE: ${UR_HEADLESS_MODE:-true}
+    UR_STATIC_MAP_TF: ${UR_STATIC_MAP_TF:-true}
     # This host's GPU is NVIDIA; Mesa's dri2/EGL path can't drive it through
     # a plain /dev/dri bind mount ("failed to create dri2 screen", driver
     # (null)). NVIDIA Container Toolkit injects the real vendor EGL/GL libraries
@@ -383,12 +384,10 @@ services:
     # the route; host routes are needed or the rover goes unreachable:
     #   sudo ip route add 192.168.0.200/32 dev wlp0s20f3 src 192.168.0.199
     #   sudo ip route add 192.168.0.101/32 dev enp0s31f6 src 192.168.0.150
-    # Depends on localize_real (-> bridge-real) so robot_map exists: MoveIt's
-    # planning frame is robot_map and the rover base links need it to resolve.
+    # Standalone: no rover/navigation dependency. The entrypoint publishes a
+    # static robot_map (identity) + the rover's fixed footprint->chassis chain
+    # for MoveIt (UR_STATIC_MAP_TF=false if the rover stack runs alongside).
     command: /ur_real_entrypoint.sh
-    depends_on:
-      localize_real:
-        condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
@@ -505,6 +504,12 @@ services:
   wrist-calibration-mock:
     <<: *simulation
     command: /wrist_calibration_entrypoint.sh mock ${WCC_ARGS:-}
+  # RViz with the "Calibration Status" panel (live state, stage, progress, next target), the robot, the
+  # planning scene (desk slab) and the planned / next-target views. Separate RViz instance: the robot's own
+  # RViz (ur-real) is not touched. Needs DISPLAY.
+  wrist-calibration-rviz:
+    <<: *simulation
+    command: /wrist_calibration_entrypoint.sh rviz ${WCC_ARGS:-}
 volumes:
   tmp:
   gz_fuel_cache:
