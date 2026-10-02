@@ -1,0 +1,15 @@
+diff --git a/src/ur/ur_driver.cpp b/src/ur/ur_driver.cpp
+index f77a9f5..e15c20b 100644
+--- a/src/ur/ur_driver.cpp
++++ b/src/ur/ur_driver.cpp
+@@ -98,7 +98,9 @@ void UrDriver::init(const UrDriverConfiguration& config)
+ 
+   startPrimaryClientCommunication();
+ 
+-  std::chrono::milliseconds timeout(1000);
++  // Local patch: the robot serves simultaneous primary-port clients ~0.7 s apart
++  // (the ROS 2 driver opens four at startup), so 1 s is too tight.
++  std::chrono::milliseconds timeout(10000);
+   try
+   {
+     waitFor([this]() { return primary_client_->getConfigurationData() != nullptr; }, timeout);

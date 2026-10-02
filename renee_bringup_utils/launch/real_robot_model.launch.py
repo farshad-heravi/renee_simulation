@@ -1,7 +1,9 @@
 """Publish the RB-Vogui rover model for RViz on the real robot.
 
 The real robot, relayed by vogui_ros1_ros2_bridge, provides the base TF but no
-robot_description. This launch publishes /robot_description from
+robot_description. This launch publishes /rover_description (not
+/robot_description, which the UR driver's controller_manager reads and must be the
+rover+arm one) from
 urdf/rbvogui_base_only.urdf.xacro (rover body only: no arm, sensors or tool
 changer) and lets the robot's own TF place the links. robot_state_publisher
 is used only to latch the description; its TF goes to private topics, so
@@ -50,6 +52,7 @@ def generate_launch_description():
             parameters=[{'robot_description': robot_description,
                          'use_sim_time': False}],
             remappings=[
+                ('robot_description', '/rover_description'),
                 ('/tf', '/robot_model_viz/tf'),
                 ('/tf_static', '/robot_model_viz/tf_static'),
             ],

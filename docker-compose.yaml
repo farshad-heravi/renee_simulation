@@ -44,6 +44,12 @@ x-gazebo-simulation: &simulation
     CYCLONEDDS_URI: "<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>120</MaxAutoParticipantIndex><Peers><Peer address=\"127.0.0.1\"/></Peers></Discovery></Domain></CycloneDDS>"
     ROS2_CLI_DISABLE_DAEMON: 1
     RENEE_SRC_PATH: /fnh_pkgs/src/renee_simulation
+    # Real UR5e addresses, read by ur_real_entrypoint.sh (set in .env). Kept here,
+    # not in the ur-real service: a service-level `environment:` would replace
+    # this whole block (YAML merge is shallow) and drop CYCLONEDDS_URI etc.
+    UR_ROBOT_IP: ${UR_ROBOT_IP:-192.168.0.101}
+    UR_REVERSE_IP: ${UR_REVERSE_IP:-192.168.0.150}
+    UR_HEADLESS_MODE: ${UR_HEADLESS_MODE:-true}
     # This host's GPU is NVIDIA; Mesa's dri2/EGL path can't drive it through
     # a plain /dev/dri bind mount ("failed to create dri2 screen", driver
     # (null)). NVIDIA Container Toolkit injects the real vendor EGL/GL libraries
@@ -95,6 +101,7 @@ x-gazebo-simulation: &simulation
     - ./scanning_entrypoint.sh:/scanning_entrypoint.sh:ro
     - ./planner_entrypoint.sh:/planner_entrypoint.sh:ro
     - ./wrist_calibration_entrypoint.sh:/wrist_calibration_entrypoint.sh:ro
+    - ./ur_real_entrypoint.sh:/ur_real_entrypoint.sh:ro
 
 x-healthcheck-defaults: &healthcheck_defaults
   interval: 5s
@@ -277,6 +284,9 @@ services:
     extends:
       file: vogui_ros1_ros2_bridge/docker-compose.yml
       service: ros1_ros2_bridge
+    environment:
+      ROS_MASTER_URI: http://${VOGUI_IP:-192.168.0.200}:11311
+      ROS_IP: ${HOST_WIFI_IP:-192.168.0.199}
     # Built from the submodule if the image isn't present locally.
     build:
       context: vogui_ros1_ros2_bridge
@@ -362,6 +372,28 @@ services:
       test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "node", "/robot/bt_navigator"]
       start_period: 60s
+  ur-real:
+    <<: *simulation
+    # Real UR5e: ur_robot_driver + MoveIt + RViz (start_moveit_real.launch.py).
+    # Env overrides: UR_ROBOT_IP (default 192.168.0.101), UR_REVERSE_IP (this
+    # host's wired IP, default 192.168.0.150), UR_END_EFFECTOR, UR_USE_RVIZ.
+    # Needs the External Control URCap program running on the pendant (host IP
+    # = UR_REVERSE_IP) before trajectories execute.
+    # NOTE: the rover (wifi) and UR (LAN) share 192.168.0.0/24 and ethernet wins
+    # the route; host routes are needed or the rover goes unreachable:
+    #   sudo ip route add 192.168.0.200/32 dev wlp0s20f3 src 192.168.0.199
+    #   sudo ip route add 192.168.0.101/32 dev enp0s31f6 src 192.168.0.150
+    # Depends on localize_real (-> bridge-real) so robot_map exists: MoveIt's
+    # planning frame is robot_map and the rover base links need it to resolve.
+    command: /ur_real_entrypoint.sh
+    depends_on:
+      localize_real:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck_defaults
+      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+             "action", "/robot/move_action"]
+      start_period: 90s
   localization:
     <<: *simulation
     command: /localization_entrypoint.sh
