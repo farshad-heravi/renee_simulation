@@ -198,6 +198,44 @@ services:
       jetson-ssh-setup:
         condition: service_completed_successfully
         required: false
+  jetson-camera-tunnel:
+    # Long-running SSH tunnel to the camera link service on the Jetson, so the PC
+    # action server (capture_camera_frames_action_server, link_host 127.0.0.1) can
+    # reach it: 127.0.0.1:JETSON_LINK_PORT -> jetson:127.0.0.1:JETSON_LINK_REMOTE_PORT.
+    # Starts after jetson-ssh-setup and jetson-code-sync, which bring up the key and
+    # the Jetson-side code + camera service. On a host that is not on the rover's
+    # network it exits cleanly and stays stopped; if the tunnel drops it restarts.
+    # Stop any manual `ssh -N -L 7788:...` first (the port must be free).
+    # Healthy = ssh is listening locally; it never connects through the forward
+    # (the camera service keeps one client at a time and the newest wins).
+    # See jetson_camera_tunnel.sh.
+    image: farshadnh/fnh_robotnik_sim:latest
+    network_mode: host
+    user: "1000:1000"
+    restart: on-failure
+    entrypoint: ["bash", "/jetson_camera_tunnel.sh"]
+    command: []
+    environment:
+      HOME: /home/robot
+      VOGUI_HOST: ${VOGUI_HOST:-192.168.0.200}
+      JETSON_LINK_PORT: ${JETSON_LINK_PORT:-7788}
+      JETSON_LINK_REMOTE_PORT: ${JETSON_LINK_REMOTE_PORT:-${JETSON_LINK_PORT:-7788}}
+    volumes:
+      - jetson_ssh:/home/robot/.ssh:ro
+      - ./jetson_camera_tunnel.sh:/jetson_camera_tunnel.sh:ro
+    depends_on:
+      jetson-ssh-setup:
+        condition: service_completed_successfully
+        required: false
+      jetson-code-sync:
+        condition: service_completed_successfully
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "awk -v a=0100007F:$$(printf '%04X' $${JETSON_LINK_PORT:-7788}) '$$4==\"0A\" && $$2==a {f=1} END{exit !f}' /proc/net/tcp"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
   world:
     <<: *simulation
     command: /world_spawn_entrypoint.sh
@@ -391,6 +429,9 @@ services:
       jetson-code-sync:
         condition: service_completed_successfully
         required: false
+      jetson-camera-tunnel:
+        condition: service_started
+        required: false
   demo:
     <<: *simulation
     command: /demo_spawn.sh
@@ -403,6 +444,9 @@ services:
         required: false
       jetson-code-sync:
         condition: service_completed_successfully
+        required: false
+      jetson-camera-tunnel:
+        condition: service_started
         required: false
   # Wrist-camera hand-eye calibration (package wrist_camera_calibration). Start the robot + MoveIt
   # (sim or real) first, put a fixed ChArUco board on the desk, then:
@@ -418,6 +462,9 @@ services:
         required: false
       jetson-code-sync:
         condition: service_completed_successfully
+        required: false
+      jetson-camera-tunnel:
+        condition: service_started
         required: false
   # Publishes robot_arm_tool0 -> wrist_camera_calibrated_optical_frame from the saved calibration.
   wrist-calibration-tf:
