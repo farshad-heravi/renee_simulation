@@ -70,11 +70,14 @@ x-gazebo-simulation: &simulation
   volumes:
     - tmp:/tmp
     - gz_fuel_cache:/home/robot/.gz/fuel
-    # Scoped copy of the dedicated vogui/jetson SSH key (not the user's
-    # personal key), owned by uid 1000 to match the container's `robot`
-    # user. Lets zed_ssh_capture_action_server's `ssh jetson ...` resolve
-    # from inside the container. See renee_perception/README.md.
-    - ${HOME}/.ssh_jetson_container:/home/robot/.ssh:ro
+    # Dedicated vogui/jetson SSH key + config (aliases `vogui-board` and
+    # `jetson`, ProxyJump through the main board), kept in a named volume so
+    # it works on any host PC with no manual setup. Populated by the
+    # `jetson-ssh-setup` service (jetson_ssh_setup.sh); lets `ssh jetson ...`
+    # (e.g. the tunnel to the camera service used by
+    # capture_camera_frames_action_server) resolve inside the container. The
+    # user's personal key is never mounted.
+    - jetson_ssh:/home/robot/.ssh:ro
     - ./../..:/fnh_pkgs:rw
     - ./build_pkgs.sh:/build_pkgs.sh:ro
     - ./world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
@@ -109,6 +112,92 @@ services:
     user: "0:0"
     entrypoint: ["chown", "-R", "1000:1000", "/home/robot/.gz/fuel"]
     command: []
+  jetson-ssh-setup:
+    # One-shot, idempotent, non-fatal: creates the dedicated key + ssh config in
+    # the jetson_ssh volume and, on first contact, authorises it (and this
+    # host's public key) on the Vogui main board and the Jetson, so the host
+    # can then `ssh -J robot@192.168.0.200 jetson@192.168.1.60` directly. Passwords
+    # come from .env (VOGUI_PASSWORD, also read from the bridge's .env;
+    # JETSON_PASSWORD) or an interactive prompt:
+    #   docker compose run --rm jetson-ssh-setup
+    # See jetson_ssh_setup.sh and .env.example.
+    image: farshadnh/fnh_robotnik_sim:latest
+    network_mode: host
+    user: "0:0"
+    entrypoint: ["bash", "/jetson_ssh_setup.sh"]
+    command: []
+    env_file:
+      - path: vogui_ros1_ros2_bridge/.env
+        required: false
+      - path: .env
+        required: false
+    environment:
+      JETSON_PASSWORD: ${JETSON_PASSWORD:-}
+    volumes:
+      - jetson_ssh:/home/robot/.ssh
+      - ./jetson_ssh_setup.sh:/jetson_ssh_setup.sh:ro
+      # Only the host's PUBLIC key is shared. Override with HOST_SSH_PUBKEY_FILE.
+      - type: bind
+        source: ${HOST_SSH_PUBKEY_FILE:-${HOME}/.ssh/id_ed25519.pub}
+        target: /host_id.pub
+        read_only: true
+        bind:
+          create_host_path: false
+  jetson-code-sync:
+    # One-shot, idempotent, non-fatal: keeps ~/renee_ws/src/renee_perception on the
+    # Jetson in step with this host's ./renee_perception (compares the host HEAD
+    # with the version recorded on the Jetson; transfers only when they differ,
+    # keeping backups of anything it replaces and refusing to overwrite files
+    # edited on the Jetson). Runs after jetson-ssh-setup, before the camera users.
+    #   JETSON_SYNC=0 disables it; JETSON_SYNC_DRY_RUN=1 only prints the plan;
+    #   JETSON_SYNC_SOURCE=worktree also sends uncommitted host changes (default: head);
+    #   JETSON_SYNC_FORCE=1 overrides the overwrite refusal.
+    # After a sync it restarts the camera service (not systemd) through the Jetson's
+    # tools/camera_link_ctl.sh, and starts it when it is not running and nothing else
+    # holds the camera (JETSON_CAMERA_RESTART=0 / JETSON_CAMERA_AUTOSTART=0 to stop that).
+    # The first sync that would overwrite differing Jetson files needs consent (the host
+    # copy is expected to win, old files are backed up):
+    #   docker compose run --rm jetson-code-sync   (confirm at the prompt)
+    # See jetson_code_sync.sh and .env.example.
+    image: farshadnh/fnh_robotnik_sim:latest
+    network_mode: host
+    user: "1000:1000"
+    entrypoint: ["bash", "/jetson_code_sync.sh"]
+    command: []
+    environment:
+      HOME: /home/robot
+      RENEE_PERCEPTION_DIR: /renee_perception
+      VOGUI_HOST: ${VOGUI_HOST:-192.168.0.200}
+      JETSON_SYNC: ${JETSON_SYNC:-1}
+      JETSON_SYNC_SOURCE: ${JETSON_SYNC_SOURCE:-head}
+      JETSON_SYNC_DRY_RUN: ${JETSON_SYNC_DRY_RUN:-0}
+      JETSON_SYNC_FORCE: ${JETSON_SYNC_FORCE:-0}
+      JETSON_CAMERA_RESTART: ${JETSON_CAMERA_RESTART:-${JETSON_SYNC_RESTART:-1}}
+      JETSON_CAMERA_AUTOSTART: ${JETSON_CAMERA_AUTOSTART:-1}
+      JETSON_CAMERA_HOLDERS: ${JETSON_CAMERA_HOLDERS:-}
+      JETSON_TARGET_DIR: ${JETSON_TARGET_DIR:-renee_ws/src/renee_perception}
+      JETSON_POST_SYNC_CMD: ${JETSON_POST_SYNC_CMD:-}
+    volumes:
+      - jetson_ssh:/home/robot/.ssh:ro
+      - ./jetson_code_sync.sh:/jetson_code_sync.sh:ro
+      - type: bind
+        source: ./renee_perception
+        target: /renee_perception
+        read_only: true
+        bind:
+          create_host_path: false
+      # renee_perception is a submodule: its .git is a pointer to
+      # ../.git/modules/renee_perception, so the parent's .git must resolve at /.git.
+      - type: bind
+        source: ./.git
+        target: /.git
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      jetson-ssh-setup:
+        condition: service_completed_successfully
+        required: false
   world:
     <<: *simulation
     command: /world_spawn_entrypoint.sh
@@ -295,12 +384,26 @@ services:
   ros_terminal:
     <<: *simulation
     command: bash
+    depends_on:
+      jetson-ssh-setup:
+        condition: service_completed_successfully
+        required: false
+      jetson-code-sync:
+        condition: service_completed_successfully
+        required: false
   demo:
     <<: *simulation
     command: /demo_spawn.sh
   scanning:
     <<: *simulation
     command: /scanning_entrypoint.sh
+    depends_on:
+      jetson-ssh-setup:
+        condition: service_completed_successfully
+        required: false
+      jetson-code-sync:
+        condition: service_completed_successfully
+        required: false
   # Wrist-camera hand-eye calibration (package wrist_camera_calibration). Start the robot + MoveIt
   # (sim or real) first, put a fixed ChArUco board on the desk, then:
   #   WCC_ARGS="num_images:=20" docker compose up wrist-calibration   (WCC_ARGS = extra launch args)
@@ -309,6 +412,13 @@ services:
   wrist-calibration:
     <<: *simulation
     command: /wrist_calibration_entrypoint.sh calibrate ${WCC_ARGS:-}
+    depends_on:
+      jetson-ssh-setup:
+        condition: service_completed_successfully
+        required: false
+      jetson-code-sync:
+        condition: service_completed_successfully
+        required: false
   # Publishes robot_arm_tool0 -> wrist_camera_calibrated_optical_frame from the saved calibration.
   wrist-calibration-tf:
     <<: *simulation
@@ -319,3 +429,4 @@ services:
 volumes:
   tmp:
   gz_fuel_cache:
+  jetson_ssh:

@@ -1,0 +1,19 @@
+# Host-side aliases for the rover's Jetson (ZED camera host), matching what the
+# `jetson-ssh-setup` compose service configures inside the containers.
+#
+# Use once per host PC: add this line at the TOP of ~/.ssh/config
+#     Include /absolute/path/to/renee_simulation/ssh_config.jetson
+# After `docker compose run --rm jetson-ssh-setup` has authorised this host's
+# public key, `ssh jetson` works from the host. Change the IPs here if you
+# override VOGUI_HOST / JETSON_HOST in .env.
+
+Host vogui-board
+    HostName 192.168.0.200
+    User robot
+    StrictHostKeyChecking accept-new
+
+Host jetson
+    HostName 192.168.1.60
+    User jetson
+    ProxyJump vogui-board
+    StrictHostKeyChecking accept-new
