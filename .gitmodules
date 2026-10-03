@@ -88,7 +88,7 @@
 [submodule "renee_perception"]
 	path = renee_perception
 	url = https://github.com/alefram/renee_perception
-	branch = main
+	branch = feat/camera_link_service
 [submodule "vogui_ros1_ros2_bridge"]
 	path = vogui_ros1_ros2_bridge
 	url = git@github.com:alefram/vogui_ros1_ros2_bridge.git
