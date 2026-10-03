@@ -43,7 +43,7 @@ x-gazebo-simulation: &simulation
     # Must match vogui_ros1_ros2_bridge/docker-compose.yml.
     CYCLONEDDS_URI: "<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>120</MaxAutoParticipantIndex><Peers><Peer address=\"127.0.0.1\"/></Peers></Discovery></Domain></CycloneDDS>"
     ROS2_CLI_DISABLE_DAEMON: 1
-    RENEE_SRC_PATH: /fnh_pkgs/src/renee_simulation
+    RENEE_SRC_PATH: /renee/src/renee_sw
     # Real UR5e addresses, read by ur_real_entrypoint.sh (set in .env). Kept here,
     # not in the ur-real service: a service-level `environment:` would replace
     # this whole block (YAML merge is shallow) and drop CYCLONEDDS_URI etc.
@@ -85,7 +85,7 @@ x-gazebo-simulation: &simulation
     # capture_camera_frames_action_server) resolve inside the container. The
     # user's personal key is never mounted.
     - jetson_ssh:/home/robot/.ssh:ro
-    - ./../..:/fnh_pkgs:rw
+    - ./../..:/renee:rw
     - ./build_pkgs.sh:/build_pkgs.sh:ro
     - ./world_spawn_entrypoint.sh:/world_spawn_entrypoint.sh:ro
     - ./robot_spawn_entrypoint.sh:/robot_spawn_entrypoint.sh:ro
@@ -100,7 +100,6 @@ x-gazebo-simulation: &simulation
     - ./bt_entrypoint.sh:/bt_entrypoint.sh:ro
     - ./demo_spawn.sh:/demo_spawn.sh:ro
     - ./scanning_entrypoint.sh:/scanning_entrypoint.sh:ro
-    - ./planner_entrypoint.sh:/planner_entrypoint.sh:ro
     - ./wrist_calibration_entrypoint.sh:/wrist_calibration_entrypoint.sh:ro
     - ./ur_real_entrypoint.sh:/ur_real_entrypoint.sh:ro
 
@@ -113,7 +112,7 @@ x-healthcheck-defaults: &healthcheck_defaults
   retries: 3
 
 # All healthchecks shell out to renee_bringup_utils' wait_for_ros (built into
-# /fnh_pkgs/install by the `builder` service).
+# /renee/install by the `builder` service).
 services:
   fuel-cache-init:
     <<: *simulation
@@ -252,7 +251,7 @@ services:
         condition: service_completed_successfully
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "topic", "/clock", "--msg"]
       start_period: 240s
   spawn-robot:
@@ -263,7 +262,7 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "controller", "/robot/controller_manager", "joint_trajectory_controller", "--state", "active"]
       start_period: 120s
   slam:
@@ -274,7 +273,7 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "tf", "robot_map", "robot_odom"]
       start_period: 60s
   bridge-real:
@@ -324,7 +323,7 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "tf", "robot_map", "robot_odom"]
       start_period: 60s
   localize_real:
@@ -340,7 +339,7 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "tf", "robot_map", "robot_odom"]
       start_period: 60s
   navigation:
@@ -351,7 +350,7 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "node", "/robot/bt_navigator"]
       start_period: 60s
   navigation-real:
@@ -370,7 +369,7 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "node", "/robot/bt_navigator"]
       start_period: 60s
   ur-real:
@@ -390,7 +389,7 @@ services:
     command: /ur_real_entrypoint.sh
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "action", "/robot/move_action"]
       start_period: 90s
   localization:
@@ -401,7 +400,7 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "tf", "robot_map", "robot_odom"]
       start_period: 60s
   # explore:
@@ -415,12 +414,12 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "action", "/robot/move_action"]
       start_period: 120s
   # joystick:
   #   <<: *simulation
-  #   command: ros2 launch teleop_twist_joy teleop-launch.py config_filepath:=/fnh_pkgs/custom.config.yaml joy_vel:=/robot/robotnik_base_control/cmd_vel_unstamped
+  #   command: ros2 launch teleop_twist_joy teleop-launch.py config_filepath:=/renee/custom.config.yaml joy_vel:=/robot/robotnik_base_control/cmd_vel_unstamped
   bt:
     <<: *simulation
     command: /bt_entrypoint.sh
@@ -431,22 +430,9 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
+      test: ["CMD", "/renee/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
              "topic", "/bt_task_status"]
       start_period: 30s
-  planner:
-    <<: *simulation
-    command: /planner_entrypoint.sh
-    depends_on:
-      moveit:
-        condition: service_healthy
-      navigation:
-        condition: service_healthy
-    healthcheck:
-      <<: *healthcheck_defaults
-      test: ["CMD", "/fnh_pkgs/install/renee_bringup_utils/lib/renee_bringup_utils/healthcheck.sh",
-             "action", "/hybrid_planner/task"]
-      start_period: 60s
   builder:
     <<: *simulation
     command: /build_pkgs.sh

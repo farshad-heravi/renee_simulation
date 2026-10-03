@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /fnh_pkgs
+cd /renee
 source install/setup.bash
 # slam_toolbox localizes (robot_map -> robot_odom) but publishes its live map on
 # /slam_map; map_server serves the fixed maps/${SIM_MAP}.yaml on /map.

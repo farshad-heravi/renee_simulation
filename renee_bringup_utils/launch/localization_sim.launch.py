@@ -41,7 +41,7 @@ def generate_launch_description():
     map_file_name = LaunchConfiguration('map_file_name')
 
     renee_src = EnvironmentVariable(
-        'RENEE_SRC_PATH', default_value='/fnh_pkgs/src/renee_simulation')
+        'RENEE_SRC_PATH', default_value='/renee/src/renee_sw')
 
     declare_args = [
         DeclareLaunchArgument(

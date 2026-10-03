@@ -18,7 +18,7 @@ slam_toolbox:
 
     # Loads the map built during the 2026-09-16 real-robot mapping session.
     # localize_real_entrypoint.sh overrides it from $REAL_MAP.
-    map_file_name: /fnh_pkgs/src/renee_simulation/maps/real_robot_environment_v4
+    map_file_name: /renee/src/renee_sw/maps/real_robot_environment_v4
     # slam_toolbox starts localizing from the map's origin (wherever
     # mapping began) — correct only if the robot happens to be
     # there when this launches. If it's elsewhere, use RViz's "2D Pose

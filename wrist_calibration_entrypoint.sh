@@ -8,8 +8,8 @@
 #   rviz      : RViz with the Calibration Status panel (config: wrist_camera_calibration_rviz/rviz/calibration.rviz)
 # Example: WCC_ARGS="num_images:=15 execute:=false" docker compose up wrist-calibration  (compose appends $WCC_ARGS)
 set -e
-cd /fnh_pkgs
-# Same retry as planner_entrypoint.sh: sourcing install/setup.bash occasionally fails to extend
+cd /renee
+# Retry because sourcing install/setup.bash occasionally fails to extend
 # AMENT_PREFIX_PATH, which makes ros2 report packages as missing.
 for i in $(seq 1 8); do
   source install/setup.bash

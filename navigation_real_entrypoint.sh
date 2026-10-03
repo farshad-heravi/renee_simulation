@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /fnh_pkgs
+cd /renee
 source install/setup.bash
 # Real-robot Nav2 bring-up, analogous to navigation_entrypoint.sh (Gazebo-sim
 # `navigation` service). Two overrides beyond use_sim:=false, both required

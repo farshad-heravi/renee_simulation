@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /fnh_pkgs
+cd /renee
 source install/setup.bash
 
 ### SPAWN THE WORLD

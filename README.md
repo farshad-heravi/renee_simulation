@@ -1,15 +1,15 @@
-# renee_simulation
+# renee_sw
 
 ### Cloning and Building the packages
 Use the following command to clone the repo and submodules inside your ws folder
 ```
 mkdir src && cd src
-git clone --recurse-submodules git@github.com:farshad-heravi/renee_simulation.git
+git clone --recurse-submodules git@github.com:farshad-heravi/renee_sw.git
 ```
 
 For the initial building, run
 ```
-cd renee_simulation
+cd renee_sw
 docker compose up builder
 ```
 

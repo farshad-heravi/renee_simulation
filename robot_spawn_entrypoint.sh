@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /fnh_pkgs
+cd /renee
 source install/setup.bash
 export ROBOT_MODEL=rbvogui_plus
 source $RENEE_SRC_PATH/world_poses.sh

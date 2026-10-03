@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /fnh_pkgs
+cd /renee
 source install/setup.bash
 # Real-robot localization against the map built by slam-real, analogous to
 # how slam_real_entrypoint.sh relates to slam_entrypoint.sh: separate from

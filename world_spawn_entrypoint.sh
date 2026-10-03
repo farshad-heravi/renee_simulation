@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /fnh_pkgs
+cd /renee
 source install/setup.bash
 export GZ_SIM_RESOURCE_PATH=$RENEE_SRC_PATH/campetella_sim/models:$GZ_SIM_RESOURCE_PATH
 echo $GZ_SIM_RESOURCE_PATH
@@ -30,9 +30,9 @@ x:=$CAMPETELLA_X y:=$CAMPETELLA_Y z:=$CAMPETELLA_Z
 tail -f /dev/null
 
 
-# -file /fnh_pkgs/src/renee_simulation/campetella_sim/models/campetella_CRC/urdf/test_box.sdf \
+# -file /renee/src/renee_sw/campetella_sim/models/campetella_CRC/urdf/test_box.sdf \
 # -x 4.5 -y 3.0 -z 0.2
 # gui:=false \
-# world_path:=/fnh_pkgs/install/renee_rbvogui_navigation/share/renee_rbvogui_navigation/world/fnh_world.sdf
-# world_path:=/fnh_pkgs/src/campetella_sim/worlds/campetella.sdf.world
-# world_path:=/fnh_pkgs/demo1.sdf
+# world_path:=/renee/install/renee_rbvogui_navigation/share/renee_rbvogui_navigation/world/fnh_world.sdf
+# world_path:=/renee/src/campetella_sim/worlds/campetella.sdf.world
+# world_path:=/renee/demo1.sdf

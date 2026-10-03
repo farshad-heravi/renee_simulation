@@ -11,7 +11,7 @@
 #   healthcheck.sh controller /robot/controller_manager arm_controller --state active
 set -e
 source /opt/ros/jazzy/setup.bash
-if [ -f /fnh_pkgs/install/setup.bash ]; then
-    source /fnh_pkgs/install/setup.bash
+if [ -f /renee/install/setup.bash ]; then
+    source /renee/install/setup.bash
 fi
 exec wait_for_ros --timeout "${HEALTHCHECK_TIMEOUT:-3}" "$@"
