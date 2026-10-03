@@ -504,6 +504,23 @@ services:
   wrist-calibration-mock:
     <<: *simulation
     command: /wrist_calibration_entrypoint.sh mock ${WCC_ARGS:-}
+  # Action servers for a real-arm calibration: arm planner (/moveit_arm_joint_motion_plan, needs MoveIt
+  # from `ur-real` running) + the ZED CaptureCameraFrames server (needs the Jetson link: the jetson-*
+  # services). Start this first, then wrist-calibration and wrist-calibration-rviz. For a camera server
+  # started elsewhere: WCC_CAMERA_SERVER=0.
+  wrist-calibration-servers:
+    <<: *simulation
+    command: /wrist_calibration_entrypoint.sh servers
+    depends_on:
+      jetson-ssh-setup:
+        condition: service_completed_successfully
+        required: false
+      jetson-code-sync:
+        condition: service_completed_successfully
+        required: false
+      jetson-camera-tunnel:
+        condition: service_started
+        required: false
   # RViz with the "Calibration Status" panel (live state, stage, progress, next target), the robot, the
   # planning scene (desk slab) and the planned / next-target views. Separate RViz instance: the robot's own
   # RViz (ur-real) is not touched. Needs DISPLAY.
